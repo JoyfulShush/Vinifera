@@ -14,12 +14,12 @@
 #include "techno.h"
 
 
+
 class SpawnManagerClass;
 class EBoltClass;
 class TechnoTypeClass;
 class TechnoTypeClassExtension;
 class AnimClass;
-
 
 class TechnoClassExtension : public RadioClassExtension,
                              public Vinifera::Detach::Listener<TechnoClass>,
@@ -122,4 +122,9 @@ class TechnoClassExtension : public RadioClassExtension,
          *  The countdown until the object's Iron Curtain effect fades away.
          */
         CDTimerClass<FrameTimerClass> IronCurtainTimer;
+
+        /**
+         *  Map
+         */
+        DynamicVectorClass<std::pair<TechnoClass*, int>> DamagedBy;
 };

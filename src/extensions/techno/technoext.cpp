@@ -169,6 +169,18 @@ void TechnoClassExtension::On_Detach(TechnoClass *target, bool all)
     if (target == SpawnOwner) {
         SpawnOwner = nullptr;
     }
+
+    int damaged_by_index = -1;
+    for (int i = 0; i < DamagedBy.size(); i++) {
+        if (target == DamagedBy[i].first) {
+            damaged_by_index = i;
+            break;
+        }
+    }
+
+    if (damaged_by_index != -1) {
+        DamagedBy.Delete(damaged_by_index);
+    }
 }
 
 

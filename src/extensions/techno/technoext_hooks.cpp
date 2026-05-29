@@ -67,6 +67,7 @@
 #include "weapontype.h"
 #include "weapontypeext.h"
 #include "wwkeyboard.h"
+#include "debughandler.h"
 
 #include <vector>
 
@@ -1322,6 +1323,7 @@ void TechnoClassExt::_Record_The_Kill(TechnoClass* source)
 
     const int points = TClass->Cost_Of(House);
 
+    const auto ext = Extension::Fetch(this);
     const auto typeext = Extension::Fetch(TClass);
 
     /**
@@ -1345,13 +1347,38 @@ void TechnoClassExt::_Record_The_Kill(TechnoClass* source)
         const auto source_ext = Extension::Fetch(source);
         const auto source_typeext = Extension::Fetch(source->TClass);
 
-        if (source->TClass->IsTrainable) {
+        if (source->TClass->IsTrainable && !source->Crew.IsElite) {
             source->Crew.Made_A_Kill(source->TClass->Cost_Of(House), points);
-
         } else if (source_typeext->IsMissileSpawn) {
-
             if (source_ext->SpawnOwner && source_ext->SpawnOwner->TClass->IsTrainable) {
                 source_ext->SpawnOwner->Crew.Made_A_Kill(source_ext->SpawnOwner->TClass->Cost_Of(House), points);
+            }
+        } else {            
+            DynamicVectorClass<TechnoClass*> eligible_units;            
+
+            for (int i = 0; i < ext->DamagedBy.size(); i++) {
+                auto& [attacker, attack_frame] = ext->DamagedBy[i];
+                
+                if (attacker == source) {
+                    continue;
+                }
+
+                if (attacker->Crew.IsElite) {
+                    continue;
+                }
+
+                if (Frame - attack_frame > 3 * TICKS_PER_SECOND) {
+                    continue;
+                }
+
+                eligible_units.Add(attacker);
+            }
+            
+            if (eligible_units.Count() > 0) {
+                TechnoClass* chosen_unit = eligible_units[Random_Pick(0, eligible_units.Count() - 1)];
+                if (chosen_unit != nullptr) {                    
+                    chosen_unit->Crew.Made_A_Kill(chosen_unit->TClass->Cost_Of(House), points);
+                }
             }
         }
 
@@ -3400,6 +3427,73 @@ DEFINE_HOOK(0x00637F0B, _TechnoClass_Find_Docking_Bay_Unoccupied_Aircraft_Patch,
     return 0;
 }
 
+DEFINE_HOOK(0x00633146, _TEST_ME, 6)
+{
+    GET(TechnoClass*, this_ptr, ESI);
+    GET(ObjectClass*, source, EBX);
+
+    DEBUG_INFO("THIS PTR: {}\n", this_ptr->Full_Name());
+    DEBUG_INFO("source: {}\n", source->Full_Name());
+    
+    if (source == nullptr || !source->Is_Techno()) {
+        return 0;
+    }
+
+    if (!source->TClass->IsTrainable) {
+        return 0;
+    }
+
+    if (source->As_Techno()->Crew.Is_Elite()) {
+        return 0;
+    }
+
+    if (this_ptr->House->Is_Ally(source)) {
+        return 0;
+    }
+
+    TechnoClassExtension* ext = Extension::Fetch(this_ptr);
+
+    bool found = false;
+    int oldest_frame = -1;
+    int oldest_frame_index = -1;
+               
+    // Check if damaged by list includes this unit
+    for (int i = 0; i < ext->DamagedBy.Count(); i++) {
+        auto& unit_tracker = ext->DamagedBy[i];
+
+        if (unit_tracker.first == source) {
+            DEBUG_INFO("Found existing source, updating tracker frame to {}\n", Frame);
+            found = true;
+            unit_tracker.second = Frame;
+            break;
+        }
+
+        int unit_tracker_frame = unit_tracker.second;
+
+        if (oldest_frame == -1) {
+            oldest_frame = unit_tracker_frame;
+            oldest_frame_index = i;
+        } else if (unit_tracker_frame < oldest_frame) {
+            oldest_frame = unit_tracker_frame;
+            oldest_frame_index = i;
+        }
+    }
+
+    // Add this unit with current frame
+    if (!found) {
+        DEBUG_INFO("Adding source, setting tracker frame to {}\n", Frame);
+        ext->DamagedBy.Add({source->As_Techno(), Frame});
+    }    
+
+    // If damaged by list is bigger than 30 instances, remove the oldest instance
+    if (ext->DamagedBy.Count() > 30) {
+        DEBUG_INFO("Removing item from list\n");
+        ext->DamagedBy.Delete(oldest_frame_index);
+        DEBUG_INFO("Item removed\n");
+    }
+
+    return 0;
+}
 
 /**
  *  Reimplements TechnoClass::AI where the game tests for AI units that are firing upon a target that is allied.
