@@ -186,6 +186,7 @@ This page lists all the individual contributions to the project by their author.
   - Allow Free Radar to remain active when players are in low power.
   - Allow cloaked units to trigger cell tags when using Entered By trigger events.
   - Add support for health tracking for bridges, as well as allowing bridges to have an armor type.
+  - Add the ability to specify sight ranges for technos when they are veteran and elite.
 - **Kerbiter (Metadorius)**:
   - Initial documentation setup.
 - **Noble Fish**:
