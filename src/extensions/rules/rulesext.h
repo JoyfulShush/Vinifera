@@ -274,12 +274,7 @@ public:
     /**
 	 *  Determines whether Free Radar would still apply even during Low Power
 	 */
-	bool IsFreeRadarOnLowPower;
-
-	/**     
-	 *  Determines whether the cloaked technos can trigger cell tags when used with Entered By trigger event.
-     */
-    bool IsCellTagsIgnoreStealth;
+	bool IsFreeRadarOnLowPower;	
 	
     /**
      *  Determines whether bridges should use the Bridge Health Tracking feature. 
