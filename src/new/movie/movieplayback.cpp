@@ -19,6 +19,7 @@
 #include "iomap.h"
 #include "movie.h"
 #include "moviebackend_mediafoundation.h"
+#include "movieskip.h"
 #include "playmovie.h"
 #include "sdl_functions.h"
 #include "sdl_movie.h"
@@ -332,9 +333,18 @@ bool MoviePlayer::Update_Playback_State()
 
     MoviePlayback_Update_Networking();
 
-    if (Session.Singleplayer_Game() && Keyboard->Check()) {
-        if (Keyboard->Get() == (KN_RLSE_BIT | KN_ESC)) {
+    if (Session.Singleplayer_Game() || MovieSkip::Is_Local_Skip_Allowed()) {
+        if (Keyboard->Check() && Keyboard->Get() == (KN_RLSE_BIT | KN_ESC)) {
             DEBUG_INFO("{}: Breakout.\n", Backend->Get_Name());
+            Stop();
+            UpdateWindow(MainWindow);
+            return false;
+        }
+    } else {
+        MovieSkip::Update_Input();
+
+        if (MovieSkip::Should_Skip()) {
+            DEBUG_INFO("{}: Multiplayer movie skip vote is unanimous.\n", Backend->Get_Name());
             Stop();
             UpdateWindow(MainWindow);
             return false;
@@ -698,6 +708,7 @@ bool MoviePlayback_Play(const char *basename, ThemeType theme, bool clear_before
 {
     const std::string filename = Resolve_Movie_Filename(basename);
     if (filename.empty()) {
+        DEBUG_WARNING("Failed to resolve modern movie filename for \"{}\".\n", basename);
         return false;
     }
 
@@ -974,18 +985,28 @@ bool MoviePlayback_Resume_Ingame(VQHandle *handle)
  */
 void MoviePlayback_Update_Networking()
 {
-    if (!Session.Singleplayer_Game()) {
+    if (!Session.Singleplayer_Game() && !MovieSkip::Is_Local_Skip_Allowed()) {
 
         // Static initializer is run when this block is first executed
         static DWORD LastNetworkRefreshTime = timeGetTime() + 1000;
+        static DWORD LastNetworkServiceTime = timeGetTime() + 50;
         const DWORD now = timeGetTime();
 
         // timeGetTime wraps around every 49.7 days of runtime,
         // using subtraction prevents the wrap-around from causing issues
         if (now - LastNetworkRefreshTime >= 1000) {
             Session.Loading_Callback(100);
-            Call_Back(); // Call_Back handles incoming network messages
             LastNetworkRefreshTime = now;
+        }
+
+        /**
+         *  Service incoming global packets more frequently than the keepalive
+         *  refresh so a unanimous skip responds promptly rather than waiting
+         *  for up to a full second.
+         */
+        if (now - LastNetworkServiceTime >= 50) {
+            Call_Back();
+            LastNetworkServiceTime = now;
         }
     }
 }

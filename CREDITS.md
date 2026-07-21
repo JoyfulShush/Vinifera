@@ -190,9 +190,20 @@ This page lists all the individual contributions to the project by their author.
   - Allow Free Radar to remain active when players are in low power.
   - Allow cloaked units to trigger cell tags when using Entered By trigger events.
   - Add support for health tracking for bridges, as well as allowing bridges to have an armor type.
+  - Add the ability to specify sight ranges for technos when they are veteran and elite
+  - Allow customizing the amount of strength technos recover in each self-heal instance per techno and globally.
+  - Fix a vanilla bug where Jumpjet infantry exiting a barracks with rally point set goes back to the barracks afterwards.
+  - Fix a vanilla bug where Jumpjet infantry being ordered to enter structures (e.g. hospital, armory) behaving extremely erratically as they try to go into it.
+  - Fix a vanilla bug where Jumpjet infantry exiting a barracks with a far enough rally point makes them block further infantry production until they land on their rally point.
+  - Fix a vanilla bug where Jumpjet infantry exiting a barracks with a far enough rally point makes them fly, land near the barracks, and only then go to their destination.
+  - Fix a bug where players could not click on a cell that included tiberium, bridges or enemy cloaked units or structure to undeploy a building.
   - Add the ability to specify sight ranges for technos when they are veteran and elite.
+  - Fix a vanilla bug where cloaked units sensed by nearby enemy units can cloak again immediately
+  - Extend aircraft speed to include house Airspeed bias, game speed bias, and the FASTER veteran/elite ability when calculating aircraft speed values.
 - **Kerbiter (Metadorius)**:
   - Initial documentation setup.
+- **Krnyoshi**:
+  - Fix a bug where MultipleFactoryCap was giving full production speed bonuses after building the second factory instead of incrementally giving speed bonuses until the cap was reached.
 - **Noble Fish**:
   - Document proofreading and formatting/styling assistance.
 - **MarkJFox**:
@@ -289,6 +300,9 @@ This page lists all the individual contributions to the project by their author.
   - Allow customizing end-of-game text color per side.
   - Add a synchronization error dialog that lets the host load a saved game, continue or quit when a multiplayer game goes out of sync, with host migration and in-dialog chat.
   - Fix a bug where the sidebar accepted mouse input while input was locked through a trigger action.
+  - Make it possible to play videos in multiplayer.
+  - Make it possible to vote-skip videos in multiplayer.
+  - Options menu is no longer opened with network input delay in multiplayer.
 - **secsome**:
   - Add support for up to 32767 waypoints to be used in scenarios.
 - **Starkku**:
