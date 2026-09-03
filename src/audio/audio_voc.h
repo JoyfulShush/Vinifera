@@ -27,12 +27,11 @@ class AudioVocClass
     friend class AudioVocHandle;
 
     void Calculate_Pan_And_Volume(Coord const& coord, float& pan_result, float& volume_result) const;
-    AudioInstanceHandle Start_File(const std::string& filename, Coord const& coord, float volume, float fade_in_seconds, bool looping, int loop_limit, float delay_seconds = 0.0f, AudioGroupType group = AUDIO_GROUP_SFX) const;
+    AudioInstanceHandle Start_File(const std::string& filename, Coord const& coord, float volume, float fade_in_seconds, bool looping, int loop_limit, float delay_seconds = 0.0f) const;
 
     std::vector<std::string> Build_Filename_Pool(int variation) const;
     float Random_Delay_Seconds() const;
     size_t Advance_Sequential_Index() const;
-    void Submit_Sounds(AudioGroupType group) const;
 
 public:
     AudioVocClass(std::string name);
@@ -48,7 +47,6 @@ public:
     static int Play(VocType voc, float volume = 1.0f, int = 0);
     static int Play(VocType voc, float volume = 1.0f);
     static int Play(VocType voc, Coord const& coord);
-    static int Voice_Play(VocType voc, float volume = 1.0f);
 
     static void Scan();
     static void ScanAsync();

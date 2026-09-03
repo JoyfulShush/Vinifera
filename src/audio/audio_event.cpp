@@ -94,13 +94,12 @@ AudioEventHandle Generate_Event_Handle()
  *
  *  @author: ZivDero
  */
-AudioEventClass::AudioEventClass(AudioEventHandle public_handle, AudioVocClass const& voc, Coord const& coord, int variation, float volume, float fade_in_seconds, AudioGroupType group) :
+AudioEventClass::AudioEventClass(AudioEventHandle public_handle, AudioVocClass const& voc, Coord const& coord, int variation, float volume, float fade_in_seconds) :
     PublicHandle(public_handle),
     Voc(&voc),
     Position(coord),
     Volume(volume),
     FadeInSeconds(fade_in_seconds),
-    Group(group),
     NextStartTime(EventClock::now())
 {
     std::vector<std::string> filenames = voc.Build_Filename_Pool(variation);
@@ -327,10 +326,10 @@ void AudioEventClass::Start_Next()
 
     if (launch_native_loop) {
         const int loop_limit = std::max(0, Voc->LoopLimit);
-        CurrentHandle = Voc->Start_File(filename, Position, Volume, FadeInSeconds, true, loop_limit, 0.0f, Group);
+        CurrentHandle = Voc->Start_File(filename, Position, Volume, FadeInSeconds, true, loop_limit);
         NativeLoopActive = (CurrentHandle != INVALID_AUDIO_INSTANCE_HANDLE);
     } else {
-        CurrentHandle = Voc->Start_File(filename, Position, Volume, FadeInSeconds, false, 0, 0.0f, Group);
+        CurrentHandle = Voc->Start_File(filename, Position, Volume, FadeInSeconds, false, 0);
     }
 
     SeenCurrentPlaying = CurrentHandle != INVALID_AUDIO_INSTANCE_HANDLE;
@@ -464,21 +463,12 @@ bool AudioEventClass::Update_Position(Coord coord)
         return true;
     }
 
-    /**
-     *  Recompute the volume the same way Start_File does: the event volume,
-     *  scaled by positional attenuation, times the voc's own volume. Voice and
-     *  UI sounds are not subject to positional adjustments there either. The
-     *  random VShift rolled at sample start is not preserved here, so a shifted
-     *  sound may step by up to its VShift on its first position update.
-     */
-    float vol = Volume;
+    float vol = Voc->Get_Volume();
     float pan = 0.0f;
 
-    if ((Voc->Type & (AUDIO_SOUND_VOICE | AUDIO_SOUND_UI)) == 0 && coord != COORD_NONE) {
+    if (coord != COORD_NONE) {
         Voc->Calculate_Pan_And_Volume(coord, pan, vol);
     }
-
-    vol = std::clamp(Voc->Get_Volume() * vol, AUDIO_VOLUME_MIN, AUDIO_VOLUME_MAX);
 
     const bool volume_ok = AudioManager.Set_Volume(CurrentHandle, vol);
     const bool pan_ok = AudioManager.Set_Pan(CurrentHandle, pan);
@@ -512,14 +502,14 @@ void AudioEventClass::Clear()
  *
  *  @author: ZivDero
  */
-AudioEventHandle AudioEventSystem::Start(AudioVocClass const& voc, Coord const& coord, int variation, float volume, float fade_in_seconds, AudioGroupType group)
+AudioEventHandle AudioEventSystem::Start(AudioVocClass const& voc, Coord const& coord, int variation, float volume, float fade_in_seconds)
 {
     const AudioEventHandle public_handle = Generate_Event_Handle();
     if (public_handle == INVALID_AUDIO_EVENT_HANDLE) {
         return INVALID_AUDIO_EVENT_HANDLE;
     }
 
-    auto event = std::make_unique<AudioEventClass>(public_handle, voc, coord, variation, volume, fade_in_seconds, group);
+    auto event = std::make_unique<AudioEventClass>(public_handle, voc, coord, variation, volume, fade_in_seconds);
 
     if (event->Is_Finished()) {
         return INVALID_AUDIO_EVENT_HANDLE;

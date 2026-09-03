@@ -241,8 +241,6 @@ HRESULT ViniferaSaveVersionInfo::Load(IStorage* storage)
  */
 HRESULT ViniferaSaveVersionInfo::Load_String(IStorage* storage, const WCHAR* name, std::string& string)
 {
-    static constexpr std::size_t MAX_HEADER_STRING_LENGTH = 4096;
-
     string.clear();
 
     IStreamPtr stm;
@@ -252,38 +250,27 @@ HRESULT ViniferaSaveVersionInfo::Load_String(IStorage* storage, const WCHAR* nam
     }
 
     std::wstring buffer;
-    bool terminated = false;
-    for (std::size_t i = 0; i < MAX_HEADER_STRING_LENGTH; ++i) {
-        WCHAR ch = L'\0';
-        ULONG bytes_read = 0;
-        res = stm->Read(&ch, sizeof(ch), &bytes_read);
-        if (FAILED(res) || bytes_read != sizeof(ch)) {
-            return STG_E_READFAULT;
+    WCHAR ch;
+
+    do {
+        res = stm->Read(&ch, sizeof(ch), nullptr);
+        if (FAILED(res)) {
+            return res;
         }
 
-        if (ch == L'\0') {
-            terminated = true;
-            break;
+        if (ch) {
+            buffer.push_back(ch);
         }
 
-        buffer.push_back(ch);
-    }
-
-    if (!terminated) {
-        return STG_E_READFAULT;
-    }
+    } while (ch);
 
     int len = WideCharToMultiByte(CP_ACP, 0, buffer.c_str(), -1, nullptr, 0, nullptr, nullptr);
     if (len > 1) {
-        string.resize(len);
-        if (WideCharToMultiByte(CP_ACP, 0, buffer.c_str(), -1, string.data(), len, nullptr, nullptr) == 0) {
-            string.clear();
-            return HRESULT_FROM_WIN32(GetLastError());
-        }
-        string.pop_back();
+        string.resize(len - 1);
+        WideCharToMultiByte(CP_ACP, 0, buffer.c_str(), -1, string.data(), len, nullptr, nullptr);
     }
 
-    return S_OK;
+    return res;
 }
 
 
@@ -302,10 +289,9 @@ HRESULT ViniferaSaveVersionInfo::Load_Int(IStorage* storage, const WCHAR* name, 
         return res;
     }
 
-    ULONG bytes_read = 0;
-    res = stm->Read(&integer, sizeof(integer), &bytes_read);
-    if (FAILED(res) || bytes_read != sizeof(integer)) {
-        return STG_E_READFAULT;
+    res = stm->Read(&integer, sizeof(integer), nullptr);
+    if (FAILED(res)) {
+        return res;
     }
 
     return res;
@@ -327,10 +313,9 @@ HRESULT ViniferaSaveVersionInfo::Load_Bool(IStorage* storage, const WCHAR* name,
         return res;
     }
 
-    ULONG bytes_read = 0;
-    res = stm->Read(&boolean, sizeof(boolean), &bytes_read);
-    if (FAILED(res) || bytes_read != sizeof(boolean)) {
-        return STG_E_READFAULT;
+    res = stm->Read(&boolean, sizeof(boolean), nullptr);
+    if (FAILED(res)) {
+        return res;
     }
 
     return res;
@@ -532,10 +517,9 @@ HRESULT ViniferaSaveVersionInfo::Load_Time(IStorage* storage, const WCHAR* name,
         return res;
     }
 
-    ULONG bytes_read = 0;
-    res = stm->Read(&time, sizeof(time), &bytes_read);
-    if (FAILED(res) || bytes_read != sizeof(time)) {
-        return STG_E_READFAULT;
+    res = stm->Read(&time, sizeof(time), nullptr);
+    if (FAILED(res)) {
+        return res;
     }
 
     return res;

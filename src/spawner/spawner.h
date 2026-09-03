@@ -27,17 +27,15 @@ public:
     static bool Init();
     static bool Start_Game();
     static void Write_Data_To_Save_Version_Info(ViniferaSaveVersionInfo& saveversioninfo);
-    static bool Is_Active() { return Config != nullptr; }
 
 private:
     static bool Start_Scenario(char* scenario_name);
     static bool Load_Game(const char* file_name);
 
     static int Spawner_Config_AI_Difficulty_To_Game_AI_Difficulty(int difficulty);
-    static bool Validate_Config();
 
     static bool Init_Session(char* scenario_name);
-    static bool Init_Network();
+    static void Init_Network();
 
 private:
     static bool HasSpawned;

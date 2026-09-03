@@ -14,7 +14,6 @@
 #include "addon.h"
 #include "audio_debug.h"
 #include "audio_manager.h"
-#include "audio_voc_handle.h"
 #include "ccini.h"
 #include "debughandler.h"
 #include "house.h"
@@ -168,24 +167,13 @@ void AudioThemeClass::AI()
      */
     if (Pending == THEME_PICK_ANOTHER) {
         Pending = Next_Song(Score);
-        DEBUG_INFO("Theme::AI - Next_Song returned \"{}\".\n", Base_Name(Pending));
-
-        /**
-         *  #BUGFIX:
-         *  If no theme is allowed to play at all (e.g. no scores are present),
-         *  give up until a new song is queued instead of retrying every frame
-         *  and indexing the theme list with an invalid index.
-         */
-        if (!Is_Valid_Theme(Pending)) {
-            Pending = THEME_NONE;
-            return;
-        }
+        DEBUG_INFO("Theme::AI - Next_Song returned \"{}\".\n", Themes[Pending]->Name);
     }
-
+    
     /**
      *  Start the song playing.
      */
-    DEBUG_INFO("Theme::AI - About to call Play_Song with \"{}\".\n", Base_Name(Pending));
+    DEBUG_INFO("Theme::AI - About to call Play_Song with \"{}\".\n", Themes[Pending]->Name);
     Play_Song(Pending);
 
     /**
@@ -213,29 +201,21 @@ ThemeType AudioThemeClass::Next_Song(ThemeType theme) const
 
         /**
          *  Shuffle the theme, but never pick the same theme that was just
-         *  playing. Count the candidates first so a single random pick
-         *  suffices and an exhausted theme list is detected up front.
+         *  playing.
          */
-        int candidates = 0;
-        for (ThemeType i = THEME_FIRST; i < Themes.Count(); ++i) {
-            if (i != theme && Is_Allowed(i)) {
-                candidates++;
+        const ThemeType previous = theme;
+        int tries = 0;
+        bool maxed = false;
+        while (tries++ <= 1000) {
+            ThemeType newtheme = Sim_Random_Pick(THEME_FIRST, static_cast<ThemeType>(Themes.Count() - 1));
+            maxed = tries == 1000;
+            if (newtheme != previous && Is_Allowed(newtheme)) {
+                theme = newtheme;
+                break;
             }
         }
-
-        /**
-         *  If the only playable theme is the one that just played, repeat it.
-         *  If nothing is playable at all, report that no theme is available.
-         */
-        if (candidates == 0) {
-            return Is_Valid_Theme(theme) && Is_Allowed(theme) ? theme : THEME_NONE;
-        }
-
-        int pick = Sim_Random_Pick(1, candidates);
-        for (ThemeType i = THEME_FIRST; i < Themes.Count(); ++i) {
-            if (i != theme && Is_Allowed(i) && --pick == 0) {
-                return i;
-            }
+        if (maxed) {
+            theme = THEME_FIRST;
         }
 
     } else {
@@ -243,7 +223,7 @@ ThemeType AudioThemeClass::Next_Song(ThemeType theme) const
         /**
          *  Sequential score playing.
          */
-        for (int i = Themes.Count(); i > 0; --i) {
+        for (int i = Themes.Count() + 1; i > 0; --i) {
             if (++theme >= Themes.Count()) {
                 theme = THEME_FIRST;
             }
@@ -251,9 +231,11 @@ ThemeType AudioThemeClass::Next_Song(ThemeType theme) const
                 return theme;
             }
         }
+
+        theme = THEME_FIRST;
     }
 
-    return THEME_NONE;
+    return theme;
 }
 
 
@@ -273,17 +255,6 @@ void AudioThemeClass::Queue_Song(ThemeType theme)
      *  play the specified theme.
      */
     if (AudioManager.Get_Group_Volume(AUDIO_GROUP_MUSIC) <= 0.0f) {
-        return;
-    }
-
-    /**
-     *  #BUGFIX:
-     *  Reject anything that is neither a control value nor a valid theme index,
-     *  so a bad request can not poison the pending theme and later be used to
-     *  index the theme list.
-     */
-    if (theme != THEME_QUIET && theme != THEME_PICK_ANOTHER && theme != THEME_NONE && !Is_Valid_Theme(theme)) {
-        DEBUG_WARNING("Theme::Queue_Song - Rejecting invalid theme index {}!\n", (int)theme);
         return;
     }
 
@@ -445,10 +416,10 @@ void AudioThemeClass::Stop(bool fade)
 
     if (Still_Playing()) {
         if (fade) {
-            DEBUG_INFO("Theme::Stop - Fading out \"{}\"...\n", Base_Name(Score));
+            DEBUG_INFO("Theme::Stop - Fading out \"{}\"...\n", Themes[Score]->Name);
             AudioManager.Request_Stop(ScoreHandle, FadeOutSeconds);
         } else {
-            DEBUG_INFO("Theme::Stop - Forced \"{}\" to stop.\n", Base_Name(Score));
+            DEBUG_INFO("Theme::Stop - Forced \"{}\" to stop.\n", Themes[Score]->Name);
             AudioManager.Request_Stop(ScoreHandle);
         }
     }
@@ -527,15 +498,13 @@ void AudioThemeClass::Free_Themes()
 
 /**
  *  Sets the music group volume, converting from 0-255 range to 0.0-1.0.
- *  The volume passes through the ion storm duck filter so a slider change
- *  during a storm stays ducked and the post-storm restore uses the new value.
  *
  *  @author: CCHyper
  */
 void AudioThemeClass::Set_Volume(int volume)
 {
     float volf = std::clamp(AudioManagerClass::iVolume_To_fVolume(volume), AUDIO_VOLUME_MIN, AUDIO_VOLUME_MAX);
-    AudioManager.Set_Group_Volume(AUDIO_GROUP_MUSIC, IonAmbient::Filter_Music_Volume(volf));
+    AudioManager.Set_Group_Volume(AUDIO_GROUP_MUSIC, volf);
 }
 
 
@@ -719,7 +688,6 @@ void AudioThemeClass::Scan()
 
         if (!AudioManager.Get_File_Info(name, tctrl->FileType, tctrl->FileName, true)) {
             AUDIO_DEBUG_MSG(LEVEL_WARNING, TYPE_THEME, "Theme::Scan - File \"%s\" was not found in any supported formats!\n", name.c_str());
-            DEBUG_WARNING("Theme::Scan - File {} was not found in any supported formats!\n", name.c_str());
             continue;
         }
 

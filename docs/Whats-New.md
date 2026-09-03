@@ -12,11 +12,7 @@ This page lists the history of changes across stable Vinifera releases and also 
 
 - Tiberium `[Vinifera]->Power`, previously hardcoded to `17`, has been de-hardcoded. As such, a proper value needs to be set in `RULES.INI`.
 
-### When updating Vinifera
-
-- Saved games are not compatible between Vinifera versions. Saves created with 0.1.0.0 will not load in 1.0.0.0.
-- Vinifera now includes its own multiplayer spawner, which supersedes the ts-patches spawner. See the [spawner section](Miscellaneous.md#spawner) for how it is configured through `SPAWN.INI`.
-- Campaign difficulty is no longer applied to AI houses from `SUN.INI` when reading a campaign scenario. Both human and AI difficulty now come from the settings the campaign run was started with.
+% ### When updating Vinifera
 
 ### From TS Patches
 
@@ -53,35 +49,7 @@ This page lists the history of changes across stable Vinifera releases and also 
 
 ## Changelog
 
-### 1.0.0.2
-
-:::{dropdown} Click to show
-
-New:
-- Screenshots now display an on-screen confirmation with the saved filename, or an error message if the screenshot could not be written (by ZivDero)
-
-Fixes:
-- Fix a bug where taking a screenshot at very high resolutions (such as 8K and above) could fail with a memory allocation error, freeze the game for several seconds, or leave an empty PNG file in the Screenshots folder. The PNG is now encoded incrementally in small bands, keeping memory use constant at any resolution (by ZivDero)
-- Fix a bug where screenshots captured a wrongly offset and scaled region of the screen when the game window size did not match the render resolution, or when running in windowed mode with the window away from the top-left corner of the screen. Screenshots now always capture the full frame at the render resolution (by ZivDero)
-- Fix a bug where the EVA voiceover on the campaign mission selection screen was played through the UI audio group, so it was attenuated by the sound effect volume on top of the speech volume, and was silent entirely when the sound effect volume was zero. It now follows the speech volume only, like the rest of EVA's lines (by ZivDero)
-- Fix a bug where menu, score screen, World Domination Tour and dialog sound effects had the sound effect volume applied twice, making them quieter than in vanilla at any setting below maximum (by ZivDero)
-- Fix a bug where system feedback sounds (such as the voice volume slider feedback beep) were scaled by the sound effect volume and skipped entirely when it was zero, contrary to vanilla behavior (by ZivDero)
-- Fix a bug where positional sounds discarded the caller-supplied volume, and moving sounds would jump in volume on their first position update because the sound's own volume was not applied (by ZivDero)
-- Fix a bug where the ion storm music volume reduction could compound permanently when the ambient sound was restarted (e.g. after loading a saved game mid-storm), and was not undone if the ambient stopped on its own. Changing the music volume during a storm now also keeps the reduction applied instead of cancelling it (by ZivDero)
-- Fix a crash that occurred when the game tried to pick the next music track while no tracks were available to play, for example when the scores mix files are missing from the installation and the music volume is raised from zero in-game (by ZivDero)
-
-:::
-
-### 1.0.0.1
-
-:::{dropdown} Click to show
-
-Fixes:
-- Fix a bug where loading a saved game through the client would fail due to overly strict spawner config validation (by ZivDero)
-
-:::
-
-### 1.0.0.0
+### 0.1.1.0
 
 :::{dropdown} Click to show
 
@@ -155,11 +123,11 @@ New:
 - Fix a bug where players could not click on a cell that included tiberium, bridges or enemy cloaked units or structure to undeploy a building (by JoyfulShush)
 - Fix a bug where cloaked units sensed by nearby enemy units can cloak again immediately (by JoyfulShush)
 - Extend aircraft speed to include house Airspeed bias, game speed bias, and the FASTER veteran/elite ability when calculating aircraft speed values (by JoyfulShush)
-- Implement the multiplayer spawner (by ZivDero, Rampastring)
+- Implemented the multiplayer spawner (by ZivDero, Rampastring)
 - Extend `BaseUnit` to accept a list of vehicles (by ZivDero/CCHyper)
 - Allow `BuildConst`, `BuildRefinery`, `BuildWeapons` and `HarvesterUnit` to properly have multiple entries (by ZivDero)
-- Add support for more than two houses for loading screens and more than two sides for sidebars and speech (by CCHyper/tomsons26, ZivDero)
-- Disallow loading campaign saves from other playthroughs, as well as from skirmish (by ZivDero)
+- Add support for more than 2 sides' loading screens, sidebars and speeches (by CCHyper/tomsons26, ZivDero)
+- Disallow loading campaign saves from other playthoughs, as well as from skirmish (by ZivDero)
 - Allow defining Options menu text colors per side (by Rampastring)
 - Add support for additional multiplayer difficulty levels (by Rampastring)
 - Allow separating human players' and AI players' normal-difficulty settings (by Rampastring)
@@ -169,7 +137,6 @@ New:
 - Make it possible to play videos in multiplayer (by Rampastring)
 - Make it possible to vote-skip videos in multiplayer (by Rampastring)
 - Add a key to allow AI-controlled units to persist their tags when they deploy into a building (by JoyfulShush)
-- Improve same-type select command logic, and allow map-wide select when pressing twice in succession (by JoyfulShush)
 
 Vinifera fixes:
 - Fix unit placement in non-TS Client builds of Vinifera (by ZivDero)

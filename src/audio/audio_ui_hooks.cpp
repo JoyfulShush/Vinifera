@@ -18,6 +18,7 @@
 #include "ccfile.h"
 #include "hooker.h"
 #include "msengine.h"
+#include "options.h"
 #include "syringe.h"
 #include "tibsun_globals.h"
 #include "vector.h"
@@ -62,7 +63,7 @@ static_assert(offsetof(ScoreClassExt, ScoreSnds) == 0x34, "ScoreClassExt::ScoreS
 
 DEFINE_HOOK(0x0056D035, _MSWordAnim_Play_Sample_Patch, 0)
 {
-    Audio_Play_UI_Sample("BLEEP1.AUD", 10, 64);
+    Audio_Play_UI_Sample("BLEEP1.AUD", 10, static_cast<int>(64.0f * Options.SoundVolume));
     return R->Origin() + 0x2F;
 }
 DEFINE_HOOK_AGAIN(0x0056D13B, _MSWordAnim_Play_Sample_Patch, 0);
@@ -72,7 +73,7 @@ DEFINE_HOOK(0x0057254C, _MSFont_Play_Sample_Patch, 0)
 {
     GET(int, index, EDX);
 
-    Audio_Play_UI_Sample(Resolve_Text_Sound_Name(index), 10, 64);
+    Audio_Play_UI_Sample(Resolve_Text_Sound_Name(index), 10, static_cast<int>(64.0f * Options.SoundVolume));
     return 0x00572576;
 }
 
@@ -144,7 +145,7 @@ DEFINE_HOOK(0x005E6B97, _ScoreFontClass_PrintChar_Sound_Patch, 0)
 {
     GET(int, index, EDX);
 
-    Audio_Play_UI_Sample(Resolve_Text_Sound_Name(index), 255, 128);
+    Audio_Play_UI_Sample(Resolve_Text_Sound_Name(index), 255, static_cast<int>(128.0f * Options.SoundVolume));
     return 0x005E6BC4;
 }
 
@@ -176,7 +177,7 @@ void ScoreClassExt::DoSound(const char *name, int volume) const
         for (int index = 0; index < ScoreSnds.Count(); ++index) {
             ScoreSfxEntryExt* snd = ScoreSnds[index];
             if (snd != nullptr && snd->Matches_Name(name)) {
-                snd->Play(volume);
+                snd->Play(static_cast<int>(static_cast<float>(volume) * Options.SoundVolume));
             }
         }
     }
@@ -279,7 +280,7 @@ bool WDTVoiceSampleExt::Playing() const
 void WDTVoiceSampleExt::Start()
 {
     if (mSoundHandle == INVALID_AUDIO_INSTANCE_HANDLE && mFileName != nullptr) {
-        AudioInstanceHandle handle = Audio_Play_UI_File(mFileName, AUDIO_TYPE_AUD, 255, mVolume);
+        AudioInstanceHandle handle = Audio_Play_UI_File(mFileName, AUDIO_TYPE_AUD, 255, static_cast<int>(static_cast<float>(mVolume) * Options.SoundVolume));
         if (handle != INVALID_AUDIO_INSTANCE_HANDLE) {
             mSoundHandle = handle;
         }
@@ -435,7 +436,7 @@ MSSfxEntryExt::~MSSfxEntryExt()
 void MSSfxEntryExt::Play()
 {
     if (AudioManager.Is_Available() && mFileName != nullptr) {
-        Audio_Play_UI_Sample(mFileName, 255, mVolume);
+        Audio_Play_UI_Sample(mFileName, 255, static_cast<int>(static_cast<float>(mVolume) * Options.SoundVolume));
     }
 }
 
@@ -511,12 +512,7 @@ void MapSelectExt::PlayVoiceOver(char const* name)
         AudioManager.Request_Stop(mPlayingVoiceOver);
     }
 
-    /**
-     *  The map selection voiceover is EVA speech, so it belongs to the speech
-     *  group, which already applies the player's voice volume. Playing it in the
-     *  UI group instead attenuated it by the sound effect volume on top of that.
-     */
-    mPlayingVoiceOver = Audio_Play_UI_Sample(name, 255, 255, AUDIO_GROUP_SPEECH);
+    mPlayingVoiceOver = Audio_Play_UI_Sample(name, 255, static_cast<int>(static_cast<float>(255) * Options.VoiceVolume));
 
     if (mPlayingVoiceOver != INVALID_AUDIO_INSTANCE_HANDLE) mQueuedVoiceOver = nullptr;
 

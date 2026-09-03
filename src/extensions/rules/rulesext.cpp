@@ -347,6 +347,10 @@ void RulesClassExtension::Object_CRC(CRCEngine &crc) const
     crc(SelfHealingStep);
     crc(BaseUnit.Count());
     crc(PersistTagsOnAIDeploy);
+	crc(StrengthenDestroyedValueThreshold);
+    crc(StrengthenBuildingValueMultiplier);
+    crc(IsStrengtheningEnabled);
+    crc(BuildNavalYard.Count());
 }
 
 
