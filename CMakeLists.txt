@@ -42,7 +42,7 @@ endif()
 SET(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo" CACHE STRING "Configs" FORCE)
 
 # Declare the project.
-project(Vinifera VERSION 1.00 LANGUAGES C CXX)
+project(Vinifera VERSION 1.0.0.1 LANGUAGES C CXX)
 
 if(POLICY CMP0074)
     cmake_policy(SET CMP0074 NEW) #policy for <PackageName>_ROOT variables.
@@ -677,7 +677,7 @@ target_link_libraries(${PROJECT_NAME} SDL3::SDL3)
 target_link_libraries(${PROJECT_NAME} miniaudio)
 target_link_libraries(${PROJECT_NAME} imgui)
 
-set(REQUIRED_LIBRARIES ws2_32 dbghelp shlwapi version comctl32 ole32 oleaut32 mfplat mfreadwrite mfuuid)
+set(REQUIRED_LIBRARIES ws2_32 dbghelp shlwapi version comctl32 ole32 oleaut32 mfplat mfreadwrite mfuuid windowscodecs)
 
 # Link to any required libraries.
 target_link_libraries(${PROJECT_NAME} ${REQUIRED_LIBRARIES})

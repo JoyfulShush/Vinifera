@@ -83,6 +83,7 @@
 #include "wwcrc.h"
 #include "wwmouse.h"
 
+#include "mapext_hooks.h"
 #include <algorithm>
 #include <map>
 
@@ -237,64 +238,9 @@ const char *PNGScreenCaptureCommandClass::Get_Description() const
 
 bool PNGScreenCaptureCommandClass::Process()
 {
-    if (!IsWindow(MainWindow)) {
+    if (VisibleSurface == nullptr) {
         return false;
     }
-
-    RECT crect;
-    if (!GetClientRect(MainWindow, &crect)) {
-        return false;
-    }
-
-    POINT tl_point;
-    tl_point.x = crect.left;
-    tl_point.y = crect.top;
-    if (!ClientToScreen(MainWindow, &tl_point)) {
-        return false;
-    }
-
-    POINT br_point;
-    br_point.x = crect.right;
-    br_point.y = crect.bottom;
-    if (!ClientToScreen(MainWindow, &br_point)) {
-        return false;
-    }
-
-    int w = std::min((int)crect.right+1, HiddenSurface->Get_Width());
-    int h = std::min((int)crect.bottom+1, HiddenSurface->Get_Height());
-
-    Rect src(tl_point.x, tl_point.y, w, h);
-    Rect dest(0, 0, HiddenSurface->Get_Width(), HiddenSurface->Get_Height());
-
-    /**
-     *  We don't want the mouse to appear in screenshots!
-     */
-    Hide_Mouse();
-
-    /**
-     *  Blit primary surface to the hidden.
-     */
-    bool blit = HiddenSurface->Blit_From(dest, *VisibleSurface, src);
-    ASSERT(blit);
-
-    /**
-     *  Now show the mouse again.
-     */
-    Show_Mouse();
-
-    char buffer[256];
-
-#if 0
-    /**
-     *  Find a free filename slot.
-     */
-    for (unsigned i = 0; i <= 9999; ++i) {
-        std::snprintf(buffer, sizeof(buffer), "SCRN%04d.PNG", i);
-        if (!RawFileClass(buffer).Is_Available()) {
-            break;
-        }
-    }
-#endif
 
     /**
      *  Generate a unique filename with the current timestamp.
@@ -306,7 +252,9 @@ bool PNGScreenCaptureCommandClass::Process()
     int min = 0;
     int sec = 0;
     Get_Full_Time(day, month, year, hour, min, sec);
-    std::snprintf(buffer, sizeof(buffer), "SCRN_%02u-%02u-%04u_%02u-%02u-%02u.PNG", day, month, year, hour, min, sec);
+
+    char buffer[256];
+    std::snprintf(buffer, sizeof(buffer), "SCRN_%02d-%02d-%04d_%02d-%02d-%02d.PNG", day, month, year, hour, min, sec);
 
     /**
      *  #issue-195
@@ -319,14 +267,40 @@ bool PNGScreenCaptureCommandClass::Process()
     std::snprintf(fullpath_buffer, sizeof(fullpath_buffer), "%s\\%s", Vinifera_ScreenshotDirectory.c_str(), buffer);
 
     /**
-     *  We found a free filename, now write the buffer to a PNG file.
+     *  Write the visible surface - the final composited frame at the full
+     *  render resolution - to a PNG file. The mouse is an OS cursor these
+     *  days and is never drawn into game surfaces, so it cannot appear in
+     *  the screenshot.
      */
-    bool success = Write_PNG_File(&RawFileClass(fullpath_buffer), *HiddenSurface, &GamePalette);
+    bool success = Write_PNG_File(&RawFileClass(fullpath_buffer), *VisibleSurface);
 
     if (success) {
         DEBUG_INFO("PNG screenshot \"{}\" written sucessfully.\n", buffer);
     } else {
         DEBUG_ERROR("Failed to write PNG screenshot \"{}\"!\n", buffer);
+    }
+
+    /**
+     *  Show the result on the screen.
+     */
+    if (TacticalMapExtension != nullptr) {
+
+        char info_buffer[288];
+        if (success) {
+            std::snprintf(info_buffer, sizeof(info_buffer), "Screenshot saved: %s", buffer);
+        } else {
+            std::snprintf(info_buffer, sizeof(info_buffer), "Failed to save screenshot!");
+        }
+
+        TacticalMapExtension->InfoTextTimer.Stop();
+
+        TacticalMapExtension->Set_Info_Text(info_buffer);
+        TacticalMapExtension->IsInfoTextSet = true;
+
+        TacticalMapExtension->InfoTextPosition = InfoTextPosType::BOTTOM_LEFT;
+
+        TacticalMapExtension->InfoTextTimer = SECONDS_TO_MILLISECONDS(4);
+        TacticalMapExtension->InfoTextTimer.Start();
     }
 
     return success;
@@ -381,6 +355,95 @@ bool DeleteCommandClass::Process()
     BeaconManager.Delete_Beacon(HOUSE_NONE, -1);
 
     return true;
+}
+
+
+/**
+ *  Replacement for SelectSameTypeCommandClass.
+ *
+ *  @author: JoyfulShush
+ */
+const char* SelectSameTypeImprovedCommandClass::Get_Name() const
+{
+    return "SelectType";
+}
+
+const char* SelectSameTypeImprovedCommandClass::Get_UI_Name() const
+{
+    return "Select Same Type";
+}
+
+const char* SelectSameTypeImprovedCommandClass::Get_Category() const
+{
+    return "Selection";
+}
+
+const char* SelectSameTypeImprovedCommandClass::Get_Description() const
+{
+    return "Selects all units of the same type as currently selected.";
+}
+
+/*
+ *  Improves the Select Same Type command in the following ways:
+ *  1. No longer deselects units that are out of the screen when running the command.
+ *  2. Rather than calling 'TacticalMap->Select_These' for each type, runs it once for all types.
+ *  3. When processed twice in a small amount of time, selects the units of those types in the entire map rather than just the current tactical view.
+ *  4. Ignores selected technos that do not belong to the player.
+ * 
+ *  @author: JoyfulShush
+ */
+bool SelectSameTypeImprovedCommandClass::Process()
+{   
+    SelectionTypes.clear();
+    DWORD current_time = timeGetTime();
+    DWORD previous_execution_time = LastExecutionTime;
+
+    LastExecutionTime = current_time;
+    
+    for (int i = 0; i < CurrentObjects.Count(); i++) {
+        auto current_object = CurrentObjects[i];
+        auto techno_class = current_object->Techno_Type_Class();
+
+        if (current_object->Is_Techno() && !current_object->As_Techno()->House->Is_Player_Control()) {
+            continue;
+        }
+
+        if (!SelectionTypes.contains(techno_class))  {
+            SelectionTypes.insert(techno_class);
+        }
+    }
+
+    if (SelectionTypes.size() > 0) {
+        if (previous_execution_time != 0 && current_time - previous_execution_time < 500) {
+            Map_Select_These(Process_Callback);
+        } else {
+            TacticalMap->Select_These(TacticalRect, Process_Callback);
+        }
+    }
+
+    return true;
+}
+
+
+/*
+ *  For each object being checked by the game, decide if the techno should be selected when running the Select Same Type command.
+ *
+ *  @author: JoyfulShush
+ */
+void SelectSameTypeImprovedCommandClass::Process_Callback(ObjectClass* object_ptr) 
+{
+    if (object_ptr == nullptr) return;
+    if (!object_ptr->Is_Techno()) return;
+    if (!object_ptr->IsDown) return;
+    
+    auto techno = object_ptr->As_Techno();
+    auto techno_class = techno->Techno_Type_Class();
+
+    if (techno->IsSelected) return;
+    if (!SelectionTypes.contains(techno_class)) return;
+    if (!techno->House->Is_Player_Control()) return;
+
+    techno->Select();
 }
 
 
