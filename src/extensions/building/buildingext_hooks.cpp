@@ -1041,7 +1041,9 @@ void BuildingClassExt::_Draw_Overlays(const Point2D& coord, const Rect& rect)
              *  If this is a factory, and the player has spied its owner, draw the cameo of what it's currently producing.
              */
             if (SpiedBy & (1 << (PlayerPtr->Class->House)) || Session.ObiWan) {
-                FactoryClass* factory = House->Is_Human_Player() ? House->Fetch_Factory(Class->ToBuild) : Factory;
+
+                BuildingTypeClassExtension* btypeext = Extension::Fetch(Class);
+                FactoryClass* factory = House->Is_Human_Player() ? Extension::Fetch(House)->Fetch_Factory(Class->ToBuild, btypeext->IsNaval ? PRODFLAG_NAVAL : PRODFLAG_NONE) : Factory;
                 if (factory != nullptr) {
                     ObjectClass* obj = factory->Get_Object();
                     if (obj != nullptr) {
@@ -2432,11 +2434,9 @@ BuildingClass* Find_Best_Alternative_Factory(BuildingClass* this_ptr, FootClass*
             // if (bldg->Class != this_ptr->Class)
             //     continue;
 
-            const TechnoTypeClass* technotype = exiting_object->TClass;
-
-            // Check ownable, so only factories of a faction that owns the object can
-            // build the object
-            if ((bldg->Class->Get_Ownable() & technotype->Get_Ownable()) == 0) {
+            bool unit_is_naval = Extension::Fetch(exiting_object->TClass)->IsNaval;
+            bool building_is_naval = Extension::Fetch(bldg->TClass)->IsNaval;
+            if (unit_is_naval != building_is_naval) {
                 continue;
             }
 
@@ -2462,16 +2462,16 @@ BuildingClass* Find_Best_Alternative_Factory(BuildingClass* this_ptr, FootClass*
 /**
  *  Replaces the loop starting from 0x0042CAB9 to improve the alternative
  *  war factory selection logic when a war factory is busy in 3 ways:
- * 
+ *
  *  1) The object can now exit from factory buildings of a different type
  *     than what the object was originally produced from.
- *  
- *  2) The above takes speed type into account when finding building to exit from,
+ *
+ *  2) The above takes naval into account when finding building to exit from,
  *     preventing ships from exiting from land-based factories and vice-versa.
- * 
+ *
  *  3) The logic prefers finding the closest rather than the "first" alternative
  *  factory building.
- * 
+ *
  *  @author: Rampastring
  */
 DEFINE_HOOK(0x0042CAB9, _BuildingClass_Exit_Object_Factory_Busy_Customized_Alternate_Factory_Seeking_Logic, 0)
