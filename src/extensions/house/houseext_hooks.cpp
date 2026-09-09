@@ -130,7 +130,7 @@ int HouseClassExt::_AI_Building()
     if (node->Type == BASE_DEFENSE || BuildingTypes[node->Type] == Rule->WallTower && node->CellID == Cell(0, 0)) {
 
         const int nodeid = Base.Nodes.ID(node);
-        if (!AI_Build_Defense(nodeid, Base.field_38.Count() > 0 ? &Base.field_38 : nullptr)) {
+        if (!AI_Build_Defense(nodeid, Base.OuterCells.Count() > 0 ? &Base.OuterCells : nullptr)) {
 
             /**
              *  If it's a wall tower, delete it twice?
@@ -2055,6 +2055,31 @@ DEFINE_HOOK(0x004C9937, HouseClass_Updated_Spied_By_Sight_Range_Patch, 0)
     Map.Sight_From(coord, sight_range, this_ptr);
 
     return 0x004C996B;
+}
+
+
+/**
+ *  Patches HouseClass::AI right at the start.
+ *  AI houses that build base nodes need to know the placement center of their base in order to correctly place structures around it.
+ *  In a skirmish setting, it is immediately set as the AI deploys its ConYards (in UnitClass::Try_To_Deploy).
+ *  However, in campaign, it is only set when the Auto Base Building trigger action is used, which can cause bases to get stuck
+ *  trying to build the next node at the ConYard's position, which is registered as the center. (in HouseClass::Where_To_Place_Building). 
+ *  This makes sure that the AI has this value correctly set if it can build base nodes.
+ *
+ *  @author: JoyfulShush
+ */
+DEFINE_HOOK(0x004BC5E6, _HouseClass_AI_Center_Patch, 8)
+{
+    GET(HouseClass*, this_ptr, ESI);
+
+    if (this_ptr->Base.PlacementCenter == CELL_NONE  && !this_ptr->Is_Human_Player() && this_ptr->ConstructionYards.Count() > 0) {
+        BuildingClass* building = this_ptr->ConstructionYards[0];
+        Cell base_cell = building->Get_Coord().As_Cell();
+        this_ptr->Center = Coord(base_cell);
+        this_ptr->Base.PlacementCenter = base_cell;
+    }
+
+    return 0;
 }
 
 
