@@ -2766,7 +2766,7 @@ MoveType BuildingClassExt::_Can_Enter_Cell(CellClass const* cell, FacingType dir
         
         auto passability = cell->Passability;        
         
-        // Buildings that has SPEED_FLOAT "speed" are Waterbound=yes
+        // Buildings that are WaterBound=yes have the SPEED_FLOAT speed type.
         if (Class->Speed == SPEED_FLOAT) {
             if (passability != PASSABLE_WATER || cell->Is_Bridge_Here()) {
                 return MOVE_NO;
