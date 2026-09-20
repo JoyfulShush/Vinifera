@@ -194,5 +194,7 @@ HRESULT BattleUISystem::Load(IStream *pStm)
     hr = Power.Load(pStm);
     if (FAILED(hr)) return hr;
 
+    ToolTips->Set_Active(true);
+
     return S_OK;
 }
