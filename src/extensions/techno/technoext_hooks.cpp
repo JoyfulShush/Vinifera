@@ -42,6 +42,7 @@
 #include "session.h"
 #include "sessionext.h"
 #include "sideext.h"
+#include "spawner.h"
 #include "spawnmanager.h"
 #include "syncrecorder.h"
 #include "syringe.h"
