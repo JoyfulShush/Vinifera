@@ -78,6 +78,7 @@ Fixes:
 - Fix a bug where an AI house could get stuck trying to build base nodes after being interrupted by a friendly immovable object (by JoyfulShush)
 - Fix a bug where a theme with `Repeat=yes` blocked the "Play Music Theme" trigger action (by ZivDero)
 - Fix a bug where music stopped for the rest of the mission once `[Basic]Theme=` had played through (by ZivDero)
+- Fix a bug where Carryalls became immune to weapons when sitting on the ground while holding a unit and being ignored by AI (by JoyfulShush)
 
 :::
 
