@@ -41,7 +41,7 @@
  *
  *  @author: CCHyper
  */
-TechnoTypeClassExtension::TechnoTypeClassExtension(const TechnoTypeClass *this_ptr) :
+TechnoTypeClassExtension::TechnoTypeClassExtension(const TechnoTypeClass* this_ptr) :
     ObjectTypeClassExtension(this_ptr),
     CloakSound(VOC_NONE),
     UncloakSound(VOC_NONE),
@@ -99,7 +99,7 @@ TechnoTypeClassExtension::TechnoTypeClassExtension(const TechnoTypeClass *this_p
     BuildTimeMultiplier(1.0f),
     IsOpportunityFire(false),
     WakeAnim(nullptr),
-    WakeAnimRate(10),                   // Default DriveLocomotion value.
+    WakeAnimRate(10), // Default DriveLocomotion value.
     IdleWakeAnim(nullptr),
     IsHideWakeWhenCloaked(false),
     SelfHealingCap(-1),
@@ -111,7 +111,8 @@ TechnoTypeClassExtension::TechnoTypeClassExtension(const TechnoTypeClass *this_p
     AbandonTargetEscortRange(-1),
     ScrapExplosion(),
     VeteranSightRange(-1),
-    EliteSightRange(-1)
+    EliteSightRange(-1),
+    BountyReward(-1)
 {
 }
 
@@ -295,6 +296,7 @@ void TechnoTypeClassExtension::Object_CRC(CRCEngine &crc) const
     crc(AbandonTargetEscortRange);
     crc(VeteranSightRange);
     crc(EliteSightRange);
+    crc(BountyReward);
 }
 
 
@@ -457,6 +459,8 @@ bool TechnoTypeClassExtension::Read_INI(CCINIClass &ini)
 
     VeteranSightRange = ini.Get_Int(ini_name, "VeteranSight", VeteranSightRange);
     EliteSightRange = ini.Get_Int(ini_name, "EliteSight", EliteSightRange);
+
+    BountyReward = ini.Get_Int(ini_name, "BountyReward", BountyReward);
 
     return true;
 }

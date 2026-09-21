@@ -420,4 +420,9 @@ public:
      *  Falls back to VeteranSightRange when not provided.
      */
     int EliteSightRange;
+
+    /*
+     *  The exact cash bounty reward given to an enemy for killing this techno
+     */
+    int BountyReward;
 };

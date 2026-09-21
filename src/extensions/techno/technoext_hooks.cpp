@@ -72,6 +72,7 @@
 #include "wwkeyboard.h"
 #include "spawner.h"
 #include "vox.h"
+#include "housetypeext.h"
 
 #include <intrin.h>
 #include <vector>
@@ -124,6 +125,7 @@ public:
     void _Look(bool incremental, bool dontmap);
     bool _Is_Allowed_To_Recloak();
     int _Value(void) const;
+    void Grant_Cash_Bounty(TechnoClass * source);
 };
 
 
@@ -145,6 +147,42 @@ static bool Is_Unit_Dying(TechnoClassExt* this_ptr)
     }
 
     return false;
+}
+
+
+void TechnoClassExt::Grant_Cash_Bounty(TechnoClass* source)
+{
+    if (source == nullptr) return;
+    
+    auto source_house_ext = Extension::Fetch(source->House->Class);
+    if (!source_house_ext->IsCanEarnBounty) return;
+
+    int cash_bounty = 0;
+
+    // if techno has a specific bounty, simply assign it
+    auto techno_class_ext = Extension::Fetch(TClass);
+    if (techno_class_ext->BountyReward > 0) {
+        cash_bounty = techno_class_ext->BountyReward;
+    }
+
+    // otherwise, if house has a cash bounty percentage, use it
+    if (cash_bounty == 0) {
+        auto house_ext = Extension::Fetch(House->Class);
+        if (house_ext->CashBountyReward > 0) {
+            cash_bounty = TClass->Cost_Of(House) * house_ext->CashBountyReward;
+        }
+    }
+
+    // otherwise, if general rules has a cash bounty percentage, use it
+    if (cash_bounty == 0) {
+        if (RuleExtension->CashBounty > 0) {
+            cash_bounty = TClass->Cost_Of(House) * RuleExtension->CashBounty;
+        }
+    }
+    
+    if (cash_bounty > 0) {
+        source->House->Refund_Money(cash_bounty);    
+    }
 }
 
 
@@ -1373,7 +1411,8 @@ void TechnoClassExt::_Record_The_Kill(TechnoClass* source)
         /**
          *  Add up the score for killing this unit
          */
-        source->House->PointTotal += points;
+        source->House->PointTotal += points; 
+        Grant_Cash_Bounty(source);
     }
 
     switch (RTTI) {
