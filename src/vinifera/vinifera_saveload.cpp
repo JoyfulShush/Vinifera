@@ -799,6 +799,14 @@ bool Vinifera_Get_All(IStream *pStm, bool load_net)
     }
     SpeechEnabled = true;
 
+    /**
+     *  Load the bridge health tracker map
+     */
+    DEBUG_INFO("Loading bridge health trackers\n");
+    if (FAILED(Load_Unordered_Map(pStm, BridgeHealths, "BridgeHealths"))) {
+        return false;
+    }
+
     UserInputLocked = Scen->InputLock;
     if (!MouseCursor->Is_Hidden() && Scen->InputLock) {
         MouseCursor->Hide_Mouse();
@@ -808,15 +816,7 @@ bool Vinifera_Get_All(IStream *pStm, bool load_net)
 
     Map.Flag_To_Redraw(GS_REDRAW_ALL);
 
-    //Vinifera_Remap_Extension_Pointers();
-
-    /**
-     *  Load the bridge health tracker map
-     */
-    DEBUG_INFO("Loading bridge health trackers\n");
-    if (FAILED(Load_Unordered_Map(pStm, BridgeHealths, "BridgeHealths"))) {
-        return false;
-    }
+    // Vinifera_Remap_Extension_Pointers();
 
     return true;
 }
