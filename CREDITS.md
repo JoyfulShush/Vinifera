@@ -203,7 +203,8 @@ This page lists all the individual contributions to the project by their author.
   - Improve same-type select command logic, and allow map-wide select when pressing twice in succession.
   - Fix the game crashing on scenario start when a HouseType has no valid starting infantry and UnitCount is above 0.
   - Fix a bug where an AI house could get stuck trying to build base nodes after being interrupted by a friendly immovable object.
-  - Fix a vanilla bug where Carryalls became immune to weapons when sitting on the ground while holding a unit and being ignored by AI.
+  - Fix a bug where CollateralDamageCoefficient would be reset if an object's section is specified on the map file.
+  - Fix a bug where Carryalls became immune to weapons when sitting on the ground while holding a unit and being ignored by AI.
 - **Kerbiter (Metadorius)**:
   - Initial documentation setup.
 - **Krnyoshi**:
@@ -312,6 +313,7 @@ This page lists all the individual contributions to the project by their author.
   - Fix crash when loading a game when a game object's or animation's graphics are present in side-specific MIX file.
   - Add support for loading OwnerDraw (Options Menu) graphics from side-specific MIX files.
   - Fix game exiting with a "The legacy version of HouseClass::Fetch_Factory has been called" error when a spectator selected a factory building.
+  - Fix a bug where AITrigger team creation happened for human players in multiplayer if enabled through a trigger, leading to desyncs due to team recruitment depending on local unit control group state.
 - **secsome**:
   - Add support for up to 32767 waypoints to be used in scenarios.
 - **Starkku**:

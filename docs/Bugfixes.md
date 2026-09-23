@@ -142,4 +142,5 @@ This page lists all vanilla bugs fixed by Vinifera.
 - Fix a bug where an AI house could get stuck trying to build base nodes after being interrupted by a friendly immovable object.
 - Fix a bug where a theme with `Repeat=yes` blocked the "Play Music Theme" trigger action.
 - Fix a bug where music stopped for the rest of the mission once `[Basic]Theme=` had played through.
+- Fix a bug where CollateralDamageCoefficient would be reset if an object's section is specified on the map file.
 - Fix a bug where Carryalls became immune to weapons when sitting on the ground while holding a unit and being ignored by AI.
