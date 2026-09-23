@@ -3810,9 +3810,10 @@ DEFINE_HOOK(0x0062D92F, _TechnoClass_Evaluate_Cell_Carryall_Ground_Check_Patch, 
 
     FootClass* target = AircraftTracker->Get_Target();
     while (target != nullptr) {
-        if (target->IsActive && target->IsDown && target->Strength > 0) {
+        if (target->IsActive && target->IsDown && target->Strength > 0 && target->Get_Cell() == cell->CellID) {
             if (Is_Carryall_On_Ground_With_Unit_Cargo(target)) {
-                // Found valid carryall - set it as the target to evaluate and skip right to the evaluation stage
+                // Found valid carryall - set it as the target to evaluate and skip right to the object evaluation stage
+                AircraftTracker->Clear_Working_Set();
                 R->EDI(target);
                 return 0x0062DA27;
             }
