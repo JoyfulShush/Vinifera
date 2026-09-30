@@ -461,6 +461,16 @@ bool TechnoTypeClassExtension::Read_INI(CCINIClass &ini)
     EliteSightRange = ini.Get_Int(ini_name, "EliteSight", EliteSightRange);
 
     BountyReward = ini.Get_Int(ini_name, "BountyReward", BountyReward);
+	
+    if (!IsInitialized) {
+        if (This()->RTTI == RTTI_INFANTRYTYPE) {
+            This()->CollateralDamageCoefficient = 0.66f;
+        } else {
+            This()->CollateralDamageCoefficient = 1.0f;
+        }
+    }
+
+    This()->CollateralDamageCoefficient = ini.Get_Float(ini_name, "CollateralDamageCoefficient", This()->CollateralDamageCoefficient);
 
     return true;
 }
