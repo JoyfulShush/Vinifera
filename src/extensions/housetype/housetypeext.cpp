@@ -23,8 +23,8 @@
  */
 HouseTypeClassExtension::HouseTypeClassExtension(const HouseTypeClass *this_ptr) :
     AbstractTypeClassExtension(this_ptr),    
-    IsCanEarnBounty(true), 
-    CashBountyReward(0)
+    IsCanEarnBounty(true),
+    CashBountyReward(-1)
 {
     HouseTypeExtensions.Add(this);
 }
