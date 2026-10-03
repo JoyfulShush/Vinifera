@@ -4129,6 +4129,123 @@ DEFINE_HOOK(0x0042AA8B, _BuildingClass_Unlimbo_ConYard_PlacementCenter_Patch, 6)
 }
 
 
+DEFINE_HOOK(0x0043136F, _BuildingClass_Do_Mission_Attack_Pop_Patch, 6)
+{
+    GET(BuildingClass*, this_ptr, ESI);
+
+    enum PopUpState {
+        POPUP_NONE = -1,
+        POPUP_UNDERGROUND, // Launcher is underground and awaiting orders.
+        POPUP_RISING,      // Doors open and launcher rises to normal locked down position.
+        POPUP_READY,       // Launcher can be facing any direction tracking targets.
+        POPUP_LOCKING,     // Rotating to locked position in preparation for lowering.
+        POPUP_LOWERING,    // Launcher is lowering into the ground.
+    };
+
+    enum JumpStates {
+        RETURN1 = 0x00431766,
+        CHANGE_TO_GUARD = 0x004315DB,
+        TRY_FIRING_AT_TARGET = 0x0043160A,
+    };
+
+    auto building_type_ext = Extension::Fetch(this_ptr->Class);
+
+    if (!building_type_ext->IsPopUpBuilding) {
+        return 0;
+    }
+
+    auto building_ext = Extension::Fetch(this_ptr);
+
+    switch (building_ext->PopUpState) {
+    case POPUP_NONE:
+        building_ext->PopUpState = POPUP_UNDERGROUND;
+        return RETURN1;
+
+    case POPUP_UNDERGROUND:
+        if (!this_ptr->Anims[BANIM_TURRET]->IsInvisible) {
+            this_ptr->Anims[BANIM_TURRET]->Make_Invisible();
+        }
+
+        if (this_ptr->TarCom == nullptr) {
+            return CHANGE_TO_GUARD;
+        } else {
+            this_ptr->Begin_Anim(BANIM_SPECIAL_ONE, this_ptr->IsDamagedAnims);
+            building_ext->PopUpState = POPUP_RISING;
+            return RETURN1;
+        }
+
+    case POPUP_RISING:
+        if (!this_ptr->Anims[BANIM_TURRET]->IsInvisible) {
+            this_ptr->Anims[BANIM_TURRET]->Make_Invisible();
+        }
+
+        if (this_ptr->Anims[BANIM_SPECIAL_ONE] != nullptr) {
+            return RETURN1;
+        }
+        
+        if (this_ptr->TarCom == nullptr) {
+            this_ptr->Begin_Anim(BANIM_SPECIAL_THREE, this_ptr->IsDamagedAnims);
+            building_ext->PopUpState = POPUP_LOWERING;
+        } else {
+            building_ext->PopUpState = POPUP_READY;
+            this_ptr->PrimaryFacing = DIR_N;
+            this_ptr->SecondaryFacing = DIR_N;
+        }
+
+        return RETURN1;
+
+    case POPUP_READY:
+        if (this_ptr->Anims[BANIM_TURRET]->IsInvisible) {
+            this_ptr->Anims[BANIM_TURRET]->Make_Visible();
+        }
+
+        if (this_ptr->TarCom == nullptr) {
+            ThreatType threat = THREAT_NORMAL;
+            this_ptr->Assign_Target(this_ptr->Greatest_Threat(threat, this_ptr->PositionCoord, false));
+
+            if (this_ptr->TarCom == nullptr) {
+                building_ext->PopUpState = POPUP_LOCKING;
+                return RETURN1;
+            }
+        }
+
+        return TRY_FIRING_AT_TARGET;
+
+    case POPUP_LOCKING:
+        if (this_ptr->Anims[BANIM_TURRET]->IsInvisible) {
+            this_ptr->Anims[BANIM_TURRET]->Make_Visible();
+        }
+
+        if (this_ptr->PrimaryFacing.Is_Rotating()) {
+            return RETURN1;
+        }
+
+        if (this_ptr->PrimaryFacing.Current().Get_Facing<256>() == DIR_N) {
+            this_ptr->Begin_Anim(BANIM_SPECIAL_THREE, this_ptr->IsDamagedAnims);
+            building_ext->PopUpState = POPUP_LOWERING;
+        } else {
+            this_ptr->PrimaryFacing.Set_Desired(DirType(DIR_N));
+        }
+
+        return RETURN1;
+
+    case POPUP_LOWERING:
+        if (!this_ptr->Anims[BANIM_TURRET]->IsInvisible) {
+            this_ptr->Anims[BANIM_TURRET]->Make_Invisible();
+        }
+
+        if (this_ptr->Anims[BANIM_SPECIAL_ONE] != nullptr) {
+            return RETURN1;
+        }
+
+        building_ext->PopUpState = POPUP_UNDERGROUND;
+        return RETURN1;
+    }
+
+    return 0;
+}
+
+
 /**
  *  Main function for patching the hooks.
  */

@@ -133,4 +133,6 @@ public:
      *  Should this building be targeted automatically if it has a weapon?
      */
     bool IsDefaultTarget;
+
+    bool IsPopUpBuilding;
 };

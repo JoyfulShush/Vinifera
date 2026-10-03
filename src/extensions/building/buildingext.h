@@ -84,4 +84,6 @@ BuildingClassExtension final : public TechnoClassExtension
          *  point, this records the expansion point that the building helped reach.
          */
         Cell AssignedExpansionPoint;
+
+        int PopUpState;
 };

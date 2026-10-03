@@ -33,7 +33,8 @@ BuildingClassExtension::BuildingClassExtension(const BuildingClass *this_ptr) :
     IsCaptureOneTimeCashGiven(false),
     IsBudgetDepleted(false),
     LastFlameSpawnFrame(0),
-    AssignedExpansionPoint(0, 0)
+    AssignedExpansionPoint(0, 0), 
+    PopUpState(-1)
 {
     BuildingExtensions.Add(this);
 }

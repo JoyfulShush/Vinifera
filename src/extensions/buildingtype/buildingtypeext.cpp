@@ -44,7 +44,8 @@ BuildingTypeClassExtension::BuildingTypeClassExtension(const BuildingTypeClass *
     IsWallOwner(true),
     IsBarGate(false),
     IsAdvancedAIIgnoresPrerequisites(false),
-    IsDefaultTarget(true)
+    IsDefaultTarget(true),
+    IsPopUpBuilding(false)
 {
     BuildingTypeExtensions.Add(this);
 }
@@ -187,6 +188,7 @@ bool BuildingTypeClassExtension::Read_INI(CCINIClass &ini)
 
     IsAdvancedAIIgnoresPrerequisites = ini.Get_Bool(ini_name, "AdvancedAIIgnoresPrerequisites", IsAdvancedAIIgnoresPrerequisites);
     IsDefaultTarget = ini.Get_Bool(ini_name, "DefaultTarget", IsDefaultTarget);
+    IsPopUpBuilding = ini.Get_Bool(ini_name, "PopUpBuilding", IsPopUpBuilding);
 
     /**
      *  ObjectTypeClass::Read_INI attempts to preload the image from a MIX file.
