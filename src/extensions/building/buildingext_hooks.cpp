@@ -4188,8 +4188,7 @@ DEFINE_HOOK(0x0043136F, _BuildingClass_Do_Mission_Attack_Pop_Patch, 6)
             building_ext->PopUpState = POPUP_LOWERING;
         } else {
             building_ext->PopUpState = POPUP_READY;
-            this_ptr->PrimaryFacing = DIR_N;
-            this_ptr->SecondaryFacing = DIR_N;
+            this_ptr->PrimaryFacing = this_ptr->Class->StartFace;
         }
 
         return RETURN1;
@@ -4220,11 +4219,11 @@ DEFINE_HOOK(0x0043136F, _BuildingClass_Do_Mission_Attack_Pop_Patch, 6)
             return RETURN1;
         }
 
-        if (this_ptr->PrimaryFacing.Current().Get_Facing<256>() == DIR_N) {
+        this_ptr->PrimaryFacing.Set_Desired(DirType(this_ptr->Class->StartFace));
+
+        if (this_ptr->PrimaryFacing.Current() == this_ptr->PrimaryFacing.Desired()) {
             this_ptr->Begin_Anim(BANIM_SPECIAL_THREE, this_ptr->IsDamagedAnims);
             building_ext->PopUpState = POPUP_LOWERING;
-        } else {
-            this_ptr->PrimaryFacing.Set_Desired(DirType(DIR_N));
         }
 
         return RETURN1;
