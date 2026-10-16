@@ -205,6 +205,8 @@ This page lists all the individual contributions to the project by their author.
   - Fix a bug where an AI house could get stuck trying to build base nodes after being interrupted by a friendly immovable object.
   - Fix a bug where CollateralDamageCoefficient would be reset if an object's section is specified on the map file.
   - Fix a bug where Carryalls became immune to weapons when sitting on the ground while holding a unit and being ignored by AI.
+  - Fix a bug where healing units in AI teams would be preferred as team's leaders, causing attack scripts to be skipped.
+  - Healing units in AI teams now assume Area Guard stance and escort team members in attack scripts.
 - **Kerbiter (Metadorius)**:
   - Initial documentation setup.
 - **Krnyoshi**:
@@ -314,6 +316,8 @@ This page lists all the individual contributions to the project by their author.
   - Add support for loading OwnerDraw (Options Menu) graphics from side-specific MIX files.
   - Fix game exiting with a "The legacy version of HouseClass::Fetch_Factory has been called" error when a spectator selected a factory building.
   - Fix a bug where AITrigger team creation happened for human players in multiplayer if enabled through a trigger, leading to desyncs due to team recruitment depending on local unit control group state.
+  - Fix a bug where the game could go out of sync when a rocket was spawned.
+  - Fix a bug where rockets could be invincible to anti-air weapons.
 - **secsome**:
   - Add support for up to 32767 waypoints to be used in scenarios.
 - **Starkku**:
