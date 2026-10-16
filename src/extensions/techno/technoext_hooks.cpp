@@ -157,22 +157,28 @@ int TechnoClassExt::Get_Cash_Bounty(TechnoClass* source)
     auto source_house_ext = Extension::Fetch(source->House->Class);
     if (!source_house_ext->IsCanEarnBounty) return 0;
 
-    // if techno has a specific bounty, use it directly
+    auto house_ext = Extension::Fetch(House->Class);
+
+    // if techno has a specific bounty, use it instead of the cost. It can scale based on the house's bounty reward if scaling is set.
     auto techno_class_ext = Extension::Fetch(TClass);
-    if (techno_class_ext->BountyReward > 0) {
-        return techno_class_ext->BountyReward;
+    if (techno_class_ext->BountyReward >= 0) {
+        if (!techno_class_ext->ScaleByHouseBounty) {
+            return techno_class_ext->BountyReward;
+        }
+
+        return techno_class_ext->BountyReward * house_ext->CashBountyReward;
     }
 
     // otherwise, if house has a cash bounty percentage set, use it.
     // This includes 0% bounty as well in order to make a house not grant anything
-    auto house_ext = Extension::Fetch(House->Class);
+    
     if (house_ext->CashBountyReward >= 0) {
-        return TClass->Cost_Of(House) * house_ext->CashBountyReward;
+        return TClass->Raw_Cost() * house_ext->CashBountyReward;
     }
 
     // otherwise, if general rules has a cash bounty percentage, use it
     if (RuleExtension->CashBounty > 0) {
-        return TClass->Cost_Of(House) * RuleExtension->CashBounty;
+        return TClass->Raw_Cost() * RuleExtension->CashBounty;
     }
 
     return 0;

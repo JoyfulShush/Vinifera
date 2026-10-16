@@ -425,4 +425,9 @@ public:
      *  The exact cash bounty reward given to an enemy for killing this techno
      */
     int BountyReward;
+
+    /*
+     * Whether the cash bounty, if provided, should scale based on the house's own bounty scaling
+     */
+    bool ScaleByHouseBounty;
 };

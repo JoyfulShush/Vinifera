@@ -1945,7 +1945,7 @@ bool TActionClassExtension::Do_ADJUST_CASH_BOUNTY(HouseClass* house, ObjectClass
     
     int value = This()->Data.Value;
     VariableOperation operation = static_cast<VariableOperation>(This()->TriggerRect.X);
-    int current_bounty_reward = house_class_ext->CashBountyReward * 100;
+    int current_bounty_reward = std::max(0.0f, house_class_ext->CashBountyReward * 100);
 
     int result = Operate(current_bounty_reward, value, operation);
 
