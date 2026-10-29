@@ -277,9 +277,9 @@ void RulesClassExtension::Object_CRC(CRCEngine &crc) const
     crc(EscortRange);
     crc(AbandonTargetEscortRange);
     crc(IsFreeRadarOnLowPower);
-    crc(IsUseBridgeHealth);
-    crc(BridgeArmor);
     crc(IsCellTagsIgnoreStealth);
+    crc(IsUseBridgeHealth);
+    crc(BridgeArmor);    
     crc(SelfHealingStep);
     crc(BaseUnit.Count());
     crc(PersistTagsOnAIDeploy);
@@ -719,6 +719,7 @@ bool RulesClassExtension::General(CCINIClass &ini)
     AbandonTargetEscortRange = ini.Get_Lepton(GENERAL, "AbandonTargetEscortRange", AbandonTargetEscortRange);
     IsFreeRadarOnLowPower = ini.Get_Bool(GENERAL, "FreeRadarOnLowPower", IsFreeRadarOnLowPower);    
     IsCellTagsIgnoreStealth = ini.Get_Bool(GENERAL, "CellTagsIgnoreStealth", IsCellTagsIgnoreStealth);
+    IsUseBridgeHealth = ini.Get_Bool(GENERAL, "UseBridgeHealth", IsUseBridgeHealth);
     PersistTagsOnAIDeploy = ini.Get_Bool(GENERAL, "PersistTagsOnAIDeploy", PersistTagsOnAIDeploy);
     CashBounty = ini.Get_Float(GENERAL, "CashBounty", CashBounty);
 
