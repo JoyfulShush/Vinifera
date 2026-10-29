@@ -12,6 +12,7 @@
 #include "technotypeext_hooks.h"
 
 #include "asserthandler.h"
+#include "bsurface.h"
 #include "ccini.h"
 #include "extension.h"
 #include "extension_globals.h"
@@ -22,6 +23,7 @@
 #include "technotype.h"
 #include "technotypeext.h"
 #include "tibsun_defines.h"
+#include "vinifera_util.h"
 
 
 /**
@@ -82,11 +84,24 @@ void const* TechnoTypeClassExt::_Get_Cameo_Data()
     if (CameoData == nullptr) {
         std::string cameo_name = ArtINI.Get_String(GraphicName.c_str(), "Cameo", "");
         if (cameo_name.empty()) {
-            std::string cameo_name = ArtINI.Get_String(IniName.c_str(), "Cameo", "");
+            cameo_name = ArtINI.Get_String(IniName.c_str(), "Cameo", "");
         }
         if (!cameo_name.empty()) {
             CameoFilename = cameo_name;
             CameoData = static_cast<ShapeSet const*>(MFCD::Retrieve((cameo_name + ".SHP").c_str()));
+
+            /**
+             *  #issue-487
+             *
+             *  Fetch the PCX/PNG cameo image surface, if one exists. This has to
+             *  happen here rather than when reading the INI, because the cameo
+             *  name is only resolved above.
+             *
+             *  @author: CCHyper, ZivDero
+             */
+            TechnoTypeClassExtension* extension = Extension::Fetch(this);
+            delete extension->CameoImageSurface;
+            extension->CameoImageSurface = Vinifera_Get_Image_Surface(cameo_name.c_str());
         }
         if (CameoData == nullptr) {
             CameoData = static_cast<ShapeSet const*>(MFCD::Retrieve("XXICON.SHP"));
