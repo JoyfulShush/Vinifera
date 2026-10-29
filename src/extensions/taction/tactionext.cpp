@@ -80,7 +80,7 @@ TActionClass::ActionDescriptionStruct TActionClassExtension::ExtActionDescriptio
     { "Stop Sounds At", "Stops sounds at the waypoint that were started by Play Sound At, and detaches any ambient previously attached to a building or terrain there."},
     { "Attach sound", "Attaches an ambient sound to all objects associated with the trigger. The VocType should have Control=LOOP for a continuous attachment; non-looping vocs play once and then go silent." },
     { "Detach sound", "Detaches any ambient sound from all objects associated with the trigger." },
-    { "Adjust Cash Bounty", "Adds, substracts or sets the cash bounty amount for the house associated with this trigger."}};
+    { "Adjust Cash Bounty", "Adjusts the cash bounty amount for the house associated with this trigger."}};
 
 
 /**
@@ -1939,6 +1939,14 @@ bool TActionClassExtension::Do_REVEAL_SOME(HouseClass*, ObjectClass*, TriggerCla
 }
 
 
+/**
+ *  Adjusts the cash bounty percentage of the trigger's house.
+ *  This supports all known operations similarly to modifying locals and globals.
+ *  The values are regarded as integers for the purposes of doing calculations, but they become floats (percentages) again afterwards.
+ *  Values have a hard lower limit of 0.
+ *
+ *  @author: JoyfulShush
+ */
 bool TActionClassExtension::Do_ADJUST_CASH_BOUNTY(HouseClass* house, ObjectClass* object, TriggerClass* trig, const Cell& cell)
 {
     auto house_class_ext = Extension::Fetch(house->Class);

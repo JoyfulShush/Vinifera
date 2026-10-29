@@ -150,12 +150,27 @@ static bool Is_Unit_Dying(TechnoClassExt* this_ptr)
 }
 
 
+/**
+ *  Calculate the cash bounty that a house earns after one of its objects kills an enemy unit.
+ *  This should be typically called during the same flow of gaining XP.
+ *  A house that is not allowed to earn a bounty can't earn anything, regardless of what was killed.
+ *  Bounties have linear rules to be awarded: direct techno rewards come first, then house specific bounty percentages, 
+ *  then global scales percentages.
+ *  The bounty earned is typically a percentage of the killed unit's raw cost, excluding any difficulty modifications.
+ *
+ * @author: JoyfulShush
+ */
 int TechnoClassExt::Get_Cash_Bounty(TechnoClass* source)
 {
-    if (source == nullptr) return 0;
+    if (source == nullptr) {
+        return 0;
+    }
     
     auto source_house_ext = Extension::Fetch(source->House->Class);
-    if (!source_house_ext->IsCanEarnBounty) return 0;
+
+    if (!source_house_ext->IsCanEarnBounty) {
+        return 0;
+    }
 
     auto house_ext = Extension::Fetch(House->Class);
 
@@ -170,8 +185,7 @@ int TechnoClassExt::Get_Cash_Bounty(TechnoClass* source)
     }
 
     // otherwise, if house has a cash bounty percentage set, use it.
-    // This includes 0% bounty as well in order to make a house not grant anything
-    
+    // This includes 0% bounty scaling as well in order to make it possible for a house to not grant any bounty.
     if (house_ext->CashBountyReward >= 0) {
         return TClass->Raw_Cost() * house_ext->CashBountyReward;
     }
