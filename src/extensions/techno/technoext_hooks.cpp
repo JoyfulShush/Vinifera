@@ -181,7 +181,7 @@ int TechnoClassExt::Get_Cash_Bounty(TechnoClass* source)
             return techno_class_ext->BountyReward;
         }
 
-        return techno_class_ext->BountyReward * house_ext->CashBountyReward;
+        return techno_class_ext->BountyReward * std::max(0.0f, house_ext->CashBountyReward);
     }
 
     // otherwise, if house has a cash bounty percentage set, use it.
