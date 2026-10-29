@@ -41,7 +41,7 @@
  *
  *  @author: CCHyper
  */
-TechnoTypeClassExtension::TechnoTypeClassExtension(const TechnoTypeClass* this_ptr) :
+TechnoTypeClassExtension::TechnoTypeClassExtension(const TechnoTypeClass *this_ptr) :
     ObjectTypeClassExtension(this_ptr),
     CloakSound(VOC_NONE),
     UncloakSound(VOC_NONE),
@@ -99,7 +99,7 @@ TechnoTypeClassExtension::TechnoTypeClassExtension(const TechnoTypeClass* this_p
     BuildTimeMultiplier(1.0f),
     IsOpportunityFire(false),
     WakeAnim(nullptr),
-    WakeAnimRate(10), // Default DriveLocomotion value.
+    WakeAnimRate(10),                   // Default DriveLocomotion value.
     IdleWakeAnim(nullptr),
     IsHideWakeWhenCloaked(false),
     SelfHealingCap(-1),
