@@ -180,28 +180,12 @@ HRESULT TechnoTypeClassExtension::Load(IStream *pStm)
     VINIFERA_SWIZZLE_REQUEST_POINTER_REMAP_LIST(ScrapExplosion, "ScrapExplosion");
 
     /**
-     *  We need to reload the "Cameo" key because TechnoTypeClass does
-     *  not store the entry value. 
+     *  The cameo image surface pointer read from the stream belongs to the
+     *  session that wrote the save, so clear it. TechnoTypeClass::Get_Cameo_Data
+     *  re-fetches both the cameo shape and this surface on demand.
      */
-    const char *ini_name = IniName.c_str();
-    const char* graphic_name = GraphicName.c_str();
+    CameoImageSurface = nullptr;
 
-    char cameo_buffer[32];
-    
-    ArtINI.Get_String(ini_name, "Cameo", "XXICON", cameo_buffer, sizeof(cameo_buffer));
-    if (std::string_view(cameo_buffer) != "XXICON") {
-        ArtINI.Get_String(graphic_name, "Cameo", "XXICON", cameo_buffer, sizeof(cameo_buffer));
-
-        /**
-         *  Fetch the cameo image surface if it exists.
-         */
-        BSurface *imagesurface = Vinifera_Get_Image_Surface(cameo_buffer);
-        if (imagesurface) {
-            CameoImageSurface = imagesurface;
-        }
-
-    }
-    
     return hr;
 }
 
@@ -383,14 +367,6 @@ bool TechnoTypeClassExtension::Read_INI(CCINIClass &ini)
     IdleRate = ArtINI.Get_Int(graphic_name, "IdleRate", IdleRate);
 
     BuildTimeMultiplier = ini.Get_Float(ini_name, "BuildTimeMultiplier", BuildTimeMultiplier);
-
-    /**
-     *  Fetch the cameo image surface if it exists.
-     */
-    BSurface* imagesurface = Vinifera_Get_Image_Surface(This()->CameoFilename.c_str());
-    if (imagesurface) {
-        CameoImageSurface = imagesurface;
-    }
 
     IsSortCameoAsBaseDefense = ini.Get_Bool(ini_name, "SortCameoAsBaseDefense", IsSortCameoAsBaseDefense);
     IsFilterFromBandBoxSelection = ini.Get_Bool(ini_name, "FilterFromBandBoxSelection", IsFilterFromBandBoxSelection);
